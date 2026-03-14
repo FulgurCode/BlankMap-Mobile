@@ -2,9 +2,9 @@ import 'package:blankmap_mobile/blank_maps.dart';
 import 'package:blankmap_mobile/login.dart';
 import 'package:blankmap_mobile/maps.dart';
 import 'package:flutter/material.dart';
-
 import 'package:blankmap_mobile/shared.dart';
 import 'package:blankmap_mobile/profile.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main() {
   runApp(const BlankMapApp());
@@ -28,10 +28,9 @@ class BlankMapApp extends StatelessWidget {
             fontFamily: '.SF Pro Display',
           ),
         ),
-        colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark).copyWith(
-          secondary: BM.accent,
-          primary: BM.accent,
-        ),
+        colorScheme: ColorScheme.fromSwatch(
+          brightness: Brightness.dark,
+        ).copyWith(secondary: BM.accent, primary: BM.accent),
       ),
       home: const LoginScreen(),
     );
@@ -39,7 +38,7 @@ class BlankMapApp extends StatelessWidget {
 }
 
 // ==========================================
-// 2. MAIN NAVIGATION
+// MAIN NAVIGATION
 // ==========================================
 class MainNav extends StatefulWidget {
   final String username;
@@ -50,26 +49,43 @@ class MainNav extends StatefulWidget {
 }
 
 class _MainNavState extends State<MainNav> {
-  String _activeLayer = 'r/Dustbins';
+  final _storage = const FlutterSecureStorage();
+
+  String _activeLayer = '';
+  String _activeLayerId = '';
+  String _token = '';
   int _currentIndex = 0;
 
-  void _goToMap(String layer) {
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  Future<void> _loadToken() async {
+    final t = await _storage.read(key: 'jwt') ?? '';
+    setState(() => _token = t);
+  }
+
+  void _goToMap(String id, String name) {
     setState(() {
-      _activeLayer = layer;
-      _currentIndex = 0; // Switch to The Map tab
+      _activeLayerId = id;
+      _activeLayer = name;
+      _currentIndex = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // These are the pages corresponding to the tabs
     final List<Widget> pages = [
       MapScreen(
         activeLayer: _activeLayer,
-        onLayerChanged: (l) => setState(() => _activeLayer = l),
+        activeLayerId: _activeLayerId,
+        token: _token,
+        onLayerChanged: (name) => setState(() => _activeLayer = name),
       ),
       BlankMapsScreen(onTagSelected: _goToMap),
-      ProfileScreen(username: widget.username),
+      ProfileScreen(token: _token),
     ];
 
     return Scaffold(

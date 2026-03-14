@@ -6,43 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
-// Make sure your shared.dart contains BM color constants and baseUrl
 import 'shared.dart';
 
-void main() {
-  runApp(const BlankMapApp());
-}
-
-class BlankMapApp extends StatelessWidget {
-  const BlankMapApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BlankMaps',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: BM.accent,
-        scaffoldBackgroundColor: BM.bg,
-        cupertinoOverrideTheme: const CupertinoThemeData(
-          brightness: Brightness.dark,
-          primaryColor: BM.accent,
-          scaffoldBackgroundColor: BM.bg,
-        ),
-      ),
-      home: BlankMapsScreen(
-        onTagSelected: (tag) => debugPrint('Selected map: $tag'),
-      ),
-    );
-  }
-}
-
 // ==========================================
-// MAIN SCREEN – combines UI from first with API from second
+// MAIN SCREEN
 // ==========================================
 class BlankMapsScreen extends StatefulWidget {
-  final Function(String) onTagSelected;
+  // Now passes both id and name so MapScreen can use the UUID
+  final Function(String id, String name) onTagSelected;
   const BlankMapsScreen({super.key, required this.onTagSelected});
 
   @override
@@ -109,7 +80,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
       );
 
       if (res.statusCode == 201 || res.statusCode == 200) {
-        fetchMaps(); // refresh list
+        fetchMaps();
       } else {
         debugPrint("Create map error ${res.body}");
       }
@@ -118,7 +89,6 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
     }
   }
 
-  // Filter maps based on search query
   List<Map<String, dynamic>> get _filtered {
     if (_query.isEmpty) return _maps;
     final q = _query.toLowerCase();
@@ -131,7 +101,6 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
     }).toList();
   }
 
-  // Trending maps (if your API provides a 'hot' field, otherwise empty)
   List<Map<String, dynamic>> get _trendingMaps =>
       _maps.where((m) => m['hot'] == true).toList();
 
@@ -147,6 +116,13 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
         ),
       ),
     );
+  }
+
+  // Helper to extract id and name from a map item
+  void _selectMap(Map<String, dynamic> item) {
+    final id = item['id']?.toString() ?? '';
+    final name = item['name'] ?? item['tag'] ?? '';
+    widget.onTagSelected(id, name);
   }
 
   @override
@@ -251,9 +227,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => _MapCard(
                       item: _trendingMaps[i],
-                      onTap: () => widget.onTagSelected(
-                        _trendingMaps[i]['tag'] ?? _trendingMaps[i]['name'],
-                      ),
+                      onTap: () => _selectMap(_trendingMaps[i]),
                       showHot: true,
                     ),
                     childCount: _trendingMaps.length,
@@ -287,12 +261,10 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
                   final list = _isSearching ? _filtered : _maps;
                   if (i >= list.length) return const SizedBox.shrink();
                   final item = list[i];
-                  // Determine if it's user created (if your API provides a flag)
                   final isUserCreated = item['userCreated'] == true;
                   return _MapCard(
                     item: item,
-                    onTap: () =>
-                        widget.onTagSelected(item['tag'] ?? item['name']),
+                    onTap: () => _selectMap(item),
                     isUserCreated: isUserCreated,
                   );
                 }, childCount: _isSearching ? _filtered.length : _maps.length),
@@ -306,7 +278,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
 }
 
 // ==========================================
-// CREATE MAP SHEET (UI from first, but calls createMap)
+// CREATE MAP SHEET
 // ==========================================
 class _CreateBlankMapSheet extends StatefulWidget {
   final Function(Map<String, dynamic>) onCreated;
@@ -383,20 +355,16 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
       return;
     }
 
-    final cleaned = raw;
-    final tag = '${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
+    final cleaned = raw.replaceFirst(RegExp(r'^r/'), '');
+    final tag = 'r/${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
 
-    // Build payload for API – adjust keys to match your backend
     final newMap = {
-      'name': tag, // or 'tag' if your API expects that
+      'name': tag,
       'description': _descCtrl.text.trim().isEmpty
           ? 'A community-created BlankMap.'
           : _descCtrl.text.trim(),
-      // Store icon name (string) – you'll need to map back to IconData when displaying
       'icon': _pickedIcon.name,
-      // Optionally include the icon pack if needed
       'iconPack': _pickedIcon.pack,
-      // The API might also expect initial pins count
       'pins': 0,
     };
 
@@ -405,8 +373,8 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
   }
 
   String get _previewTag {
-    final raw = _nameCtrl.text.trim();
-    return raw.isEmpty ? 'YourMap' : '$raw';
+    final raw = _nameCtrl.text.trim().replaceFirst(RegExp(r'^r/'), '');
+    return raw.isEmpty ? 'r/YourMap' : 'r/$raw';
   }
 
   @override
@@ -488,6 +456,14 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
                 controller: _nameCtrl,
                 placeholder: 'YourBlankMap',
                 errorText: _nameError,
+                prefix: const Text(
+                  'r/',
+                  style: TextStyle(
+                    color: BM.accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
                 onChanged: (_) {
                   if (_nameError != null) setState(() => _nameError = null);
                   setState(() {});
@@ -700,7 +676,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
 }
 
 // ==========================================
-// HELPER WIDGETS (unchanged from first snippet)
+// HELPER WIDGETS
 // ==========================================
 class _CreateBanner extends StatelessWidget {
   final VoidCallback onTap;
@@ -992,22 +968,15 @@ class _MapCard extends StatelessWidget {
     this.isUserCreated = false,
   });
 
-  // Helper to get icon data from stored name – you'll want to expand this
-  // or use a proper mapping. For now we fallback to a default icon.
   IconData _getIconData() {
-    // Try to get from the item; if it's an IconData stored directly, use it.
     if (item['iconData'] != null && item['iconData'] is IconData) {
       return item['iconData'] as IconData;
     }
-    // If we have a string name, you could map it here.
-    // This is a simplified example – you'd need to map strings to actual IconData.
-    const defaultIcon = CupertinoIcons.placemark;
-    return defaultIcon;
+    return CupertinoIcons.placemark;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine which keys to use – your API might return 'name' and 'description'
     final tag = item['tag'] ?? item['name'] ?? 'Unnamed';
     final desc = item['desc'] ?? item['description'] ?? '';
     final pins = item['pin_count']?.toString() ?? '0';
