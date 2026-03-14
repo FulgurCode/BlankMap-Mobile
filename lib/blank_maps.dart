@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_iconpicker/Models/configuration.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
-import 'package:blankmap_mobile/shared.dart'; // Uncomment if needed
+import 'shared.dart';
 
 // ==========================================
-// 1. APP ENTRY & THEME MOCKS
+// 1. APP ENTRY & THEME
 // ==========================================
 void main() {
   runApp(const BlankMapApp());
@@ -35,9 +35,6 @@ class BlankMapApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Changed CupertinoApp to MaterialApp.
-    // This natively injects MaterialLocalizations and Material themes required by
-    // flutter_iconpicker. Your UI will still look identical since we use Cupertino scaffolds.
     return MaterialApp(
       title: 'BlankMaps',
       debugShowCheckedModeBanner: false,
@@ -79,6 +76,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
     ...allBlankMaps,
     ..._userCreatedMaps,
   ];
+
   List<Map<String, dynamic>> get _trendingMaps =>
       _allMaps.where((m) => m['hot'] == true).toList();
 
@@ -100,8 +98,6 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
   void _openCreateSheet() {
     showCupertinoModalPopup(
       context: context,
-      // FIX: Wrap the sheet in a transparent Material widget.
-      // This satisfies flutter_iconpicker's need for a Material ancestor when it builds its dialog.
       builder: (_) => Material(
         type: MaterialType.transparency,
         child: _CreateBlankMapSheet(
@@ -241,6 +237,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
                 delegate: SliverChildBuilderDelegate(
                   (_, i) {
                     final list = _isSearching ? _filtered : _allMaps;
+                    if (i >= list.length) return const SizedBox.shrink();
                     return _MapCard(
                       item: list[i],
                       onTap: () => widget.onTagSelected(list[i]['tag']),
@@ -276,7 +273,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
   IconPickerIcon _pickedIcon = IconPickerIcon(
     name: 'location_on',
     data: Icons.location_on,
-    pack: 'cupertino',
+    pack: 'material',
   );
   bool _iconWasPicked = false;
   String? _nameError;
@@ -288,7 +285,6 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
     super.dispose();
   }
 
-  // FIX: This call will now work flawlessly.
   Future<void> _pickIcon() async {
     final picked = await showIconPicker(
       context,
@@ -299,6 +295,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
         selectedIconBackgroundColor: BM.accent,
         searchHintText: 'Search icons...',
         iconSize: 28,
+        adaptiveDialog: false,
         iconPickerShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -359,284 +356,296 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      decoration: BoxDecoration(
-        color: BM.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: BM.border),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          left: 22,
-          right: 22,
-          top: 18,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        decoration: BoxDecoration(
+          color: BM.surface,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: BM.border),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: BM.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.only(
+            left: 22,
+            right: 22,
+            top: 18,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: BM.accentSoft,
-                    borderRadius: BorderRadius.circular(13),
-                    border: Border.all(color: BM.accent.withOpacity(0.4)),
+                    color: BM.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: const Icon(
-                    CupertinoIcons.plus_circle_fill,
-                    color: BM.accent,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Create a BlankMap',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: BM.textPri,
-                      ),
-                    ),
-                    Text(
-                      'Your community layer, your rules.',
-                      style: TextStyle(color: BM.textSec, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const _FieldLabel(label: 'NAME', hint: 'e.g. BrokenBenches'),
-            const SizedBox(height: 8),
-            _InputField(
-              controller: _nameCtrl,
-              placeholder: 'YourBlankMap',
-              errorText: _nameError,
-              prefix: const Text(
-                'r/',
-                style: TextStyle(
-                  color: BM.accent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
                 ),
               ),
-              onChanged: (_) {
-                if (_nameError != null) setState(() => _nameError = null);
-                setState(() {});
-              },
-            ),
-            const SizedBox(height: 18),
-            const _FieldLabel(label: 'DESCRIPTION', hint: 'optional'),
-            const SizedBox(height: 8),
-            _InputField(
-              controller: _descCtrl,
-              placeholder: 'What does this BlankMap track?',
-              maxLines: 2,
-            ),
-            const SizedBox(height: 22),
-            const _FieldLabel(label: 'ICON'),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: _pickIcon,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: BM.surfaceAlt,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: _iconWasPicked
-                        ? BM.accent.withOpacity(0.5)
-                        : BM.border,
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: BM.accentSoft,
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(color: BM.accent.withOpacity(0.4)),
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.plus_circle_fill,
+                      color: BM.accent,
+                      size: 20,
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: _iconWasPicked ? BM.accentSoft : BM.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _iconWasPicked
-                              ? BM.accent.withOpacity(0.4)
-                              : BM.border,
-                        ),
-                      ),
-                      child: Icon(_pickedIcon.data, color: BM.accent, size: 22),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _iconWasPicked ? 'Icon selected' : 'Choose an icon',
-                            style: TextStyle(
-                              color: _iconWasPicked ? BM.textPri : BM.textSec,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _iconWasPicked
-                                ? 'Tap to change'
-                                : 'Tap to browse all icons',
-                            style: const TextStyle(
-                              color: BM.textTer,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: BM.accentSoft,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: BM.accent.withOpacity(0.3)),
-                      ),
-                      child: const Text(
-                        'Browse',
+                  const SizedBox(width: 12),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create a BlankMap',
                         style: TextStyle(
-                          color: BM.accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: BM.textPri,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      Text(
+                        'Your community layer, your rules.',
+                        style: TextStyle(color: BM.textSec, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                const Text(
-                  'Preview:',
-                  style: TextStyle(color: BM.textTer, fontSize: 12),
+              const SizedBox(height: 24),
+              const _FieldLabel(label: 'NAME', hint: 'e.g. BrokenBenches'),
+              const SizedBox(height: 8),
+              _InputField(
+                controller: _nameCtrl,
+                placeholder: 'YourBlankMap',
+                errorText: _nameError,
+                prefix: const Text(
+                  'r/',
+                  style: TextStyle(
+                    color: BM.accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
                 ),
-                const SizedBox(width: 10),
-                Container(
+                onChanged: (_) {
+                  if (_nameError != null) setState(() => _nameError = null);
+                  setState(() {});
+                },
+              ),
+              const SizedBox(height: 18),
+              const _FieldLabel(label: 'DESCRIPTION', hint: 'optional'),
+              const SizedBox(height: 8),
+              _InputField(
+                controller: _descCtrl,
+                placeholder: 'What does this BlankMap track?',
+                maxLines: 2,
+              ),
+              const SizedBox(height: 22),
+              const _FieldLabel(label: 'ICON'),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: _pickIcon,
+                child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 16,
+                    vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: BM.accentSoft,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: BM.accent.withOpacity(0.35)),
+                    color: BM.surfaceAlt,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _iconWasPicked
+                          ? BM.accent.withOpacity(0.5)
+                          : BM.border,
+                    ),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(_pickedIcon.data, color: BM.accent, size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        _previewTag,
-                        style: const TextStyle(
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: _iconWasPicked ? BM.accentSoft : BM.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _iconWasPicked
+                                ? BM.accent.withOpacity(0.4)
+                                : BM.border,
+                          ),
+                        ),
+                        child: Icon(
+                          _pickedIcon.data,
                           color: BM.accent,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _iconWasPicked
+                                  ? 'Icon selected'
+                                  : 'Choose an icon',
+                              style: TextStyle(
+                                color: _iconWasPicked ? BM.textPri : BM.textSec,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _iconWasPicked
+                                  ? 'Tap to change'
+                                  : 'Tap to browse all icons',
+                              style: const TextStyle(
+                                color: BM.textTer,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: BM.accentSoft,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: BM.accent.withOpacity(0.3)),
+                        ),
+                        child: const Text(
+                          'Browse',
+                          style: TextStyle(
+                            color: BM.accent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: BM.surfaceAlt,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: BM.border),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: BM.textSec,
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  const Text(
+                    'Preview:',
+                    style: TextStyle(color: BM.textTer, fontSize: 12),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: BM.accentSoft,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: BM.accent.withOpacity(0.35)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_pickedIcon.data, color: BM.accent, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          _previewTag,
+                          style: const TextStyle(
+                            color: BM.accent,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: BM.surfaceAlt,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: BM.border),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: BM.textSec,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: GestureDetector(
-                    onTap: _submit,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: BM.accent,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(color: BM.accentGlow, blurRadius: 18),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            CupertinoIcons.checkmark_alt,
-                            color: BM.bg,
-                            size: 16,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Create BlankMap',
-                            style: TextStyle(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: GestureDetector(
+                      onTap: _submit,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: BM.accent,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(color: BM.accentGlow, blurRadius: 18),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              CupertinoIcons.checkmark_alt,
                               color: BM.bg,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
+                              size: 16,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 8),
+                            Text(
+                              'Create BlankMap',
+                              style: TextStyle(
+                                color: BM.bg,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

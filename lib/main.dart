@@ -1,7 +1,7 @@
 import 'package:blankmap_mobile/blank_maps.dart';
 import 'package:blankmap_mobile/login.dart';
 import 'package:blankmap_mobile/maps.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 import 'package:blankmap_mobile/shared.dart';
 import 'package:blankmap_mobile/profile.dart';
@@ -15,20 +15,22 @@ class BlankMapApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoApp(
+    return MaterialApp(
       title: 'BlankMap',
       debugShowCheckedModeBanner: false,
-      theme: const CupertinoThemeData(
+      theme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: BM.accent,
-        barBackgroundColor: BM.bg,
         scaffoldBackgroundColor: BM.bg,
-        textTheme: CupertinoTextThemeData(
-          primaryColor: BM.textPri,
-          textStyle: TextStyle(
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(
             color: BM.textPri,
             fontFamily: '.SF Pro Display',
           ),
+        ),
+        colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark).copyWith(
+          secondary: BM.accent,
+          primary: BM.accent,
         ),
       ),
       home: const LoginScreen(),
@@ -49,55 +51,53 @@ class MainNav extends StatefulWidget {
 
 class _MainNavState extends State<MainNav> {
   String _activeLayer = 'r/Dustbins';
+  int _currentIndex = 0;
 
   void _goToMap(String layer) {
-    setState(() => _activeLayer = layer);
-    // CupertinoTabController would be needed for programmatic switching
-    // For the demo, layer is updated and user taps to The Map tab
+    setState(() {
+      _activeLayer = layer;
+      _currentIndex = 0; // Switch to The Map tab
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
-      backgroundColor: BM.bg,
-      tabBar: CupertinoTabBar(
+    // These are the pages corresponding to the tabs
+    final List<Widget> pages = [
+      MapScreen(
+        activeLayer: _activeLayer,
+        onLayerChanged: (l) => setState(() => _activeLayer = l),
+      ),
+      BlankMapsScreen(onTagSelected: _goToMap),
+      ProfileScreen(username: widget.username),
+    ];
+
+    return Scaffold(
+      body: pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
         backgroundColor: BM.surface,
-        activeColor: BM.accent,
-        inactiveColor: BM.textTer,
-        border: const Border(top: BorderSide(color: BM.border, width: 0.5)),
+        selectedItemColor: BM.accent,
+        unselectedItemColor: BM.textTer,
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.map),
-            activeIcon: Icon(CupertinoIcons.map_fill),
+            icon: Icon(Icons.map_outlined),
+            activeIcon: Icon(Icons.map),
             label: 'The Map',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.compass),
-            activeIcon: Icon(CupertinoIcons.compass_fill),
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
             label: 'BlankMaps',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.person),
-            activeIcon: Icon(CupertinoIcons.person_fill),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
       ),
-      tabBuilder: (context, index) {
-        switch (index) {
-          case 0:
-            return MapScreen(
-              activeLayer: _activeLayer,
-              onLayerChanged: (l) => setState(() => _activeLayer = l),
-            );
-          case 1:
-            return BlankMapsScreen(onTagSelected: _goToMap);
-          case 2:
-            return ProfileScreen(username: widget.username);
-          default:
-            return const SizedBox();
-        }
-      },
     );
   }
 }
