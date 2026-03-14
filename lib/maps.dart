@@ -354,7 +354,7 @@ class _MapScreenState extends State<MapScreen> {
                         children: [
                           Icon(
                             CupertinoIcons.location_solid,
-                            color: BM.accent,
+                            color: Color.fromARGB(255, 0, 0, 0),
                             size: 38,
                             shadows: [
                               Shadow(color: Colors.black54, blurRadius: 20),

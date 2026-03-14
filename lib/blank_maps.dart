@@ -139,7 +139,7 @@ class _BlankMapsScreenState extends State<BlankMapsScreen> {
       navigationBar: CupertinoNavigationBar(
         backgroundColor: BM.bg,
         border: const Border(bottom: BorderSide(color: BM.border, width: 0.5)),
-        middle: const Text(
+        middle: Text(
           'BlankMaps',
           style: TextStyle(
             color: BM.textPri,
@@ -321,7 +321,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
         iconPickerShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Pick an Icon',
           style: TextStyle(
             color: BM.textPri,
@@ -329,7 +329,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
             fontSize: 17,
           ),
         ),
-        closeChild: const Text(
+        closeChild: Text(
           'Cancel',
           style: TextStyle(color: BM.accent, fontSize: 15),
         ),
@@ -456,14 +456,14 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
                 controller: _nameCtrl,
                 placeholder: 'YourBlankMap',
                 errorText: _nameError,
-                prefix: const Text(
-                  'r/',
-                  style: TextStyle(
-                    color: BM.accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
+                // prefix: const Text(
+                //   'r/',
+                //   style: TextStyle(
+                //     color: BM.accent,
+                //     fontWeight: FontWeight.w700,
+                //     fontSize: 15,
+                //   ),
+                // ),
                 onChanged: (_) {
                   if (_nameError != null) setState(() => _nameError = null);
                   setState(() {});
@@ -554,7 +554,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: BM.accent.withOpacity(0.3)),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Browse',
                           style: TextStyle(
                             color: BM.accent,
@@ -570,7 +570,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
               const SizedBox(height: 22),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Preview:',
                     style: TextStyle(color: BM.textTer, fontSize: 12),
                   ),
@@ -1054,10 +1054,7 @@ class _MapCard extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
-                const Text(
-                  'pins',
-                  style: TextStyle(color: BM.textTer, fontSize: 10),
-                ),
+                Text('pins', style: TextStyle(color: BM.textTer, fontSize: 10)),
               ],
             ),
             const SizedBox(width: 4),
