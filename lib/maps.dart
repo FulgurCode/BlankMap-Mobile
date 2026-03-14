@@ -56,10 +56,10 @@ class _MapScreenState extends State<MapScreen> {
   // Maps layer display-name → blank-map UUID (resolved once on init)
   final Map<String, String> _layerNameToId = {};
 
-  final List<String> _quickLayers = allBlankMaps
-      .take(6)
-      .map((m) => m['tag'] as String)
-      .toList();
+  // final List<String> _quickLayers = allBlankMaps
+  //     .take(6)
+  //     .map((m) => m['tag'] as String)
+  //     .toList();
 
   @override
   void initState() {
@@ -642,79 +642,80 @@ class _MapScreenState extends State<MapScreen> {
             child: Icon(CupertinoIcons.plus, color: Colors.black54, size: 26),
           ),
           // ── TOP GRADIENT + LAYER CHIPS ────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.only(top: topPad + 8, bottom: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [BM.bg.withOpacity(0.96), BM.bg.withOpacity(0.0)],
-                  stops: const [0.35, 1.0],
-                ),
-              ),
-              child: SizedBox(
-                height: 38,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  itemCount: _quickLayers.length,
-                  itemBuilder: (_, i) {
-                    final l = _quickLayers[i];
-                    final sel = l == widget.activeLayer;
-                    return GestureDetector(
-                      onTap: () => widget.onLayerChanged(l),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: sel ? BM.accent : BM.surface,
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: sel ? BM.accent : BM.border,
-                          ),
-                          boxShadow: sel
-                              ? [
-                                  BoxShadow(
-                                    color: BM.accentGlow,
-                                    blurRadius: 12,
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        child: Text(
-                          l,
-                          style: TextStyle(
-                            color: sel ? BM.bg : BM.textSec,
-                            fontSize: 12,
-                            fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: Container(
+          //     padding: EdgeInsets.only(top: topPad + 8, bottom: 12),
+          //     decoration: BoxDecoration(
+          //       gradient: LinearGradient(
+          //         begin: Alignment.topCenter,
+          //         end: Alignment.bottomCenter,
+          //         colors: [BM.bg.withOpacity(0.96), BM.bg.withOpacity(0.0)],
+          //         stops: const [0.35, 1.0],
+          //       ),
+          //     ),
+          //     child: SizedBox(
+          //       height: 38,
+          //       child: ListView.builder(
+          //         scrollDirection: Axis.horizontal,
+          //         padding: const EdgeInsets.symmetric(horizontal: 14),
+          //         itemCount: _quickLayers.length,
+          //         itemBuilder: (_, i) {
+          //           final l = _quickLayers[i];
+          //           final sel = l == widget.activeLayer;
+          //           return GestureDetector(
+          //             onTap: () => widget.onLayerChanged(l),
+          //             child: AnimatedContainer(
+          //               duration: const Duration(milliseconds: 180),
+          //               margin: const EdgeInsets.only(right: 8),
+          //               padding: const EdgeInsets.symmetric(
+          //                 horizontal: 14,
+          //                 vertical: 7,
+          //               ),
+          //               decoration: BoxDecoration(
+          //                 color: sel ? BM.accent : BM.surface,
+          //                 borderRadius: BorderRadius.circular(22),
+          //                 border: Border.all(
+          //                   color: sel ? BM.accent : BM.border,
+          //                 ),
+          //                 boxShadow: sel
+          //                     ? [
+          //                         BoxShadow(
+          //                           color: BM.accentGlow,
+          //                           blurRadius: 12,
+          //                         ),
+          //                       ]
+          //                     : [],
+          //               ),
+          //               child: Text(
+          //                 l,
+          //                 style: TextStyle(
+          //                   color: sel ? BM.bg : BM.textSec,
+          //                   fontSize: 12,
+          //                   fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+          //                 ),
+          //               ),
+          //             ),
+          //           );
+          //         },
+          //       ),
+          //     ),
+          //   ),
+          // ),
           // ── LOCATE ME BUTTON ─────────────────────
           Positioned(
-            top: topPad + 58,
-            right: 14,
+            // top: topPad,
+            bottom: 85,
+            right: 20,
             child: GestureDetector(
               onTap: () {
                 if (_locLoaded) _mapCtrl.move(_userLoc, 16.0);
               },
               child: Container(
-                width: 42,
-                height: 42,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: BM.surface,
                   borderRadius: BorderRadius.circular(13),
