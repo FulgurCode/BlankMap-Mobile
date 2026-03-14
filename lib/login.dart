@@ -219,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                   const SizedBox(height: 26),
 
-                  const Text(
+                  Text(
                     'BlankMap.',
                     style: TextStyle(
                       fontSize: 48,
@@ -231,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen>
 
                   const SizedBox(height: 8),
 
-                  const Text(
+                  Text(
                     'Your city. Uncensored.',
                     style: TextStyle(fontSize: 18, color: BM.textSec),
                   ),
