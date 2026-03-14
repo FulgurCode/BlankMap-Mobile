@@ -383,8 +383,8 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
       return;
     }
 
-    final cleaned = raw.replaceFirst(RegExp(r'^r/'), '');
-    final tag = 'r/${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
+    final cleaned = raw;
+    final tag = '${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
 
     // Build payload for API – adjust keys to match your backend
     final newMap = {
@@ -405,8 +405,8 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
   }
 
   String get _previewTag {
-    final raw = _nameCtrl.text.trim().replaceFirst(RegExp(r'^r/'), '');
-    return raw.isEmpty ? 'r/YourMap' : 'r/$raw';
+    final raw = _nameCtrl.text.trim();
+    return raw.isEmpty ? 'YourMap' : '$raw';
   }
 
   @override
@@ -488,14 +488,6 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
                 controller: _nameCtrl,
                 placeholder: 'YourBlankMap',
                 errorText: _nameError,
-                prefix: const Text(
-                  'r/',
-                  style: TextStyle(
-                    color: BM.accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
                 onChanged: (_) {
                   if (_nameError != null) setState(() => _nameError = null);
                   setState(() {});
@@ -1018,7 +1010,7 @@ class _MapCard extends StatelessWidget {
     // Determine which keys to use – your API might return 'name' and 'description'
     final tag = item['tag'] ?? item['name'] ?? 'Unnamed';
     final desc = item['desc'] ?? item['description'] ?? '';
-    final pins = item['pins']?.toString() ?? '0';
+    final pins = item['pin_count']?.toString() ?? '0';
     final hot = item['hot'] == true;
     final icon = _getIconData();
 
