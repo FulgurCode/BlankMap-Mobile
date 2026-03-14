@@ -258,34 +258,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children:
-                                ['r/Dustbins', 'r/Potholes', 'r/FreeWater']
-                                    .map(
-                                      (tag) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: BM.accentSoft,
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          border: Border.all(
-                                            color: BM.accent.withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          tag,
-                                          style: const TextStyle(
-                                            color: BM.accent,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                            children: ['Dustbins', 'Potholes', 'FreeWater']
+                                .map(
+                                  (tag) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: BM.accentSoft,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: BM.accent.withOpacity(0.3),
                                       ),
-                                    )
-                                    .toList(),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: const TextStyle(
+                                        color: BM.accent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ),
                         ],
                       ),

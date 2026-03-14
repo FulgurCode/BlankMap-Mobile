@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:blankmap_mobile/main.dart';
 import 'package:blankmap_mobile/shared.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -194,112 +195,120 @@ class _LoginScreenState extends State<LoginScreen>
             position: _slide,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Spacer(flex: 2),
+              child: Scaffold(
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Spacer(flex: 2),
 
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: BM.accentSoft,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: BM.accent.withOpacity(0.5),
-                        width: 1.5,
+                    Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: BM.accentSoft,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: BM.accent.withOpacity(0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.layers_alt,
+                        color: BM.accent,
+                        size: 28,
                       ),
                     ),
-                    child: const Icon(
-                      CupertinoIcons.layers_alt,
-                      color: BM.accent,
-                      size: 28,
+
+                    const SizedBox(height: 26),
+
+                    Text(
+                      'BlankMap.',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: BM.textPri,
+                        letterSpacing: -2,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 26),
+                    const SizedBox(height: 8),
 
-                  Text(
-                    'BlankMap.',
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: BM.textPri,
-                      letterSpacing: -2,
+                    Text(
+                      'Fill in the blanks of your city..',
+                      style: TextStyle(fontSize: 18, color: BM.textSec),
                     ),
-                  ),
 
-                  const SizedBox(height: 8),
+                    const Spacer(flex: 2),
 
-                  Text(
-                    'Your city. Uncensored.',
-                    style: TextStyle(fontSize: 18, color: BM.textSec),
-                  ),
+                    if (isRegister) ...[
+                      CupertinoTextField(
+                        controller: nameCtrl,
+                        placeholder: 'Name',
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
 
-                  const Spacer(flex: 2),
-
-                  if (isRegister) ...[
                     CupertinoTextField(
-                      controller: nameCtrl,
-                      placeholder: 'Name',
+                      controller: emailCtrl,
+                      placeholder: 'Email',
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 15,
                       ),
                     ),
+
                     const SizedBox(height: 14),
-                  ],
 
-                  CupertinoTextField(
-                    controller: emailCtrl,
-                    placeholder: 'Email',
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 15,
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  CupertinoTextField(
-                    controller: passCtrl,
-                    placeholder: 'Password',
-                    obscureText: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 15,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: CupertinoButton.filled(
-                      onPressed: loading ? null : submit,
-                      child: loading
-                          ? const CupertinoActivityIndicator()
-                          : Text(isRegister ? "Create Account" : "Login"),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Center(
-                    child: CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: toggleMode,
-                      child: Text(
-                        isRegister
-                            ? "Already have an account? Login"
-                            : "Create an account",
-                        style: const TextStyle(color: BM.accent),
+                    CupertinoTextField(
+                      controller: passCtrl,
+                      placeholder: 'Password',
+                      obscureText: true,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 15,
                       ),
                     ),
-                  ),
 
-                  const Spacer(flex: 1),
-                ],
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: CupertinoButton.filled(
+                        onPressed: loading ? null : submit,
+                        child: loading
+                            ? const CupertinoActivityIndicator()
+                            : Text(
+                                isRegister ? "Create Account" : "Login",
+                                style: TextStyle(
+                                  color: Colors
+                                      .black, // Changes the text color to red
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Center(
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: toggleMode,
+                        child: Text(
+                          isRegister
+                              ? "Already have an account? Login"
+                              : "Create an account",
+                          style: const TextStyle(color: BM.accent),
+                        ),
+                      ),
+                    ),
+
+                    const Spacer(flex: 1),
+                  ],
+                ),
               ),
             ),
           ),

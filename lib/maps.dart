@@ -25,11 +25,13 @@ class MapPin {
 class MapScreen extends StatefulWidget {
   final String activeLayer;
   final Function(String) onLayerChanged;
+
   const MapScreen({
     super.key,
     required this.activeLayer,
     required this.onLayerChanged,
   });
+
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
@@ -45,6 +47,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _pinsLoading = false;
 
   final Map<String, String> _layerNameToId = {};
+  List<Map<String, dynamic>> _allMaps = []; // ← self-fetched for filter bar
 
   @override
   void initState() {
@@ -61,7 +64,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<String?> _getToken() => _storage.read(key: 'jwt');
 
-  // ── Resolve layer name → blank-map UUID ─────────────────────────────────
+  // ── Fetch all blank maps → populate filter bar + name→id map ────────────
   Future<void> _loadBlankMapIds() async {
     try {
       final token = await _getToken();
@@ -71,11 +74,13 @@ class _MapScreenState extends State<MapScreen> {
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List;
-        for (final m in data) {
+        final maps = data.map((m) => Map<String, dynamic>.from(m)).toList();
+        for (final m in maps) {
           final name = (m['name'] ?? m['tag'] ?? '') as String;
           final id = (m['id'] ?? '') as String;
           if (name.isNotEmpty && id.isNotEmpty) _layerNameToId[name] = id;
         }
+        if (mounted) setState(() => _allMaps = maps);
       }
     } catch (e) {
       debugPrint('Load blank-map IDs error: $e');
@@ -354,11 +359,11 @@ class _MapScreenState extends State<MapScreen> {
                         children: [
                           Icon(
                             CupertinoIcons.location_solid,
-                            color: Color.fromARGB(255, 0, 0, 0),
+                            color: Colors.black,
                             size: 38,
-                            shadows: [
-                              Shadow(color: Colors.black54, blurRadius: 20),
-                            ],
+                            // shadows: [
+                            //   Shadow(color: Colors.black54, blurRadius: 20),
+                            // ],
                           ),
                         ],
                       ),
@@ -368,10 +373,72 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ],
           ),
+
           // ── CROSSHAIR ────────────────────────────────────────────────
           const Center(
             child: Icon(CupertinoIcons.plus, color: Colors.black54, size: 26),
           ),
+
+          // ── LAYER FILTER BAR ─────────────────────────────────────────
+          if (_allMaps.isNotEmpty)
+            Positioned(
+              top: topPad + 10,
+              left: 0,
+              right: 0,
+              child: SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  itemCount: _allMaps.length,
+                  itemBuilder: (_, i) {
+                    final m = _allMaps[i];
+                    final name = (m['name'] ?? m['tag'] ?? '') as String;
+                    final isActive = name == widget.activeLayer;
+                    return GestureDetector(
+                      onTap: () => widget.onLayerChanged(name),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive ? BM.accent : BM.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isActive ? BM.accent : BM.border,
+                          ),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: BM.accentGlow,
+                                    blurRadius: 10,
+                                  ),
+                                ]
+                              : [
+                                  const BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                        ),
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            color: isActive ? BM.bg : BM.textSec,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
           // ── LOCATE ME ────────────────────────────────────────────────
           Positioned(
             bottom: 85,
@@ -404,6 +471,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
+
           // ── PINS LOADING ──────────────────────────────────────────────
           if (_pinsLoading)
             Positioned(
@@ -436,6 +504,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
+
           // ── GPS LOADING ───────────────────────────────────────────────
           if (!_locLoaded)
             Positioned(
@@ -471,6 +540,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
+
           // ── DROP PIN BUTTON ───────────────────────────────────────────
           Positioned(
             bottom: 20,
@@ -501,7 +571,9 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Pin to ${widget.activeLayer}',
+                      widget.activeLayer.isEmpty
+                          ? 'Select a layer'
+                          : 'Pin to ${widget.activeLayer}',
                       style: const TextStyle(
                         color: BM.bg,
                         fontSize: 15,
@@ -571,7 +643,6 @@ class _PinSheetState extends State<_PinSheet> {
       _submitted = true;
     });
     await widget.onRate(stars);
-    // Refresh from API after submitting
     final data = await widget.fetchRating();
     if (mounted) {
       setState(() {
@@ -584,145 +655,140 @@ class _PinSheetState extends State<_PinSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
-      decoration: BoxDecoration(
-        color: BM.surface,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: BM.border),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            width: 36,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 18),
-            decoration: BoxDecoration(
-              color: BM.border,
-              borderRadius: BorderRadius.circular(2),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
+        decoration: BoxDecoration(
+          color: BM.surface,
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: BM.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                color: BM.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          // Icon
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: BM.accentSoft,
-              borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: BM.accent.withOpacity(0.35)),
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: BM.accentSoft,
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: BM.accent.withOpacity(0.35)),
+              ),
+              child: const Icon(
+                CupertinoIcons.location_solid,
+                color: BM.accent,
+                size: 38,
+                shadows: [Shadow(color: Colors.black54, blurRadius: 10)],
+              ),
             ),
-            child: const Icon(
-              CupertinoIcons.location_solid,
-              color: BM.accent,
-              size: 38,
-              shadows: [Shadow(color: Colors.black54, blurRadius: 10)],
+            const SizedBox(height: 14),
+            Text(
+              widget.pin.layer,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: BM.textPri,
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            widget.pin.layer,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: BM.textPri,
+            const SizedBox(height: 4),
+            Text(
+              '${widget.pin.location.latitude.toStringAsFixed(5)}, '
+              '${widget.pin.location.longitude.toStringAsFixed(5)}',
+              style: const TextStyle(color: BM.textTer, fontSize: 11),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${widget.pin.location.latitude.toStringAsFixed(5)}, '
-            '${widget.pin.location.longitude.toStringAsFixed(5)}',
-            style: const TextStyle(color: BM.textTer, fontSize: 11),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Current rating summary ──────────────────────────────────
-          _loadingRating
-              ? const CupertinoActivityIndicator(color: BM.accent, radius: 8)
-              : _totalReviews == 0
-              ? const Text(
-                  'No ratings yet',
-                  style: TextStyle(color: BM.textTer, fontSize: 12),
-                )
-              : Row(
+            const SizedBox(height: 20),
+            _loadingRating
+                ? const CupertinoActivityIndicator(color: BM.accent, radius: 8)
+                : _totalReviews == 0
+                ? const Text(
+                    'No ratings yet',
+                    style: TextStyle(color: BM.textTer, fontSize: 12),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        CupertinoIcons.star_fill,
+                        color: Color(0xFFFFC107),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        _avgRating % 1 == 0
+                            ? '${_avgRating.toInt()}'
+                            : _avgRating.toStringAsFixed(1),
+                        style: const TextStyle(
+                          color: BM.textPri,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '($_totalReviews ${_totalReviews == 1 ? 'rating' : 'ratings'})',
+                        style: const TextStyle(color: BM.textTer, fontSize: 12),
+                      ),
+                    ],
+                  ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (i) {
+                final filled = i < _selectedStars;
+                return GestureDetector(
+                  onTap: _submitted ? null : () => _rate(i + 1),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(
+                      filled ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                      color: filled ? const Color(0xFFFFC107) : BM.textTer,
+                      size: 38,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 28),
+            GestureDetector(
+              onTap: widget.onDelete,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  color: BM.danger.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: BM.danger.withOpacity(0.25)),
+                ),
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      CupertinoIcons.star_fill,
-                      color: Color(0xFFFFC107),
-                      size: 16,
-                    ),
-                    const SizedBox(width: 5),
+                    Icon(CupertinoIcons.trash, color: BM.danger, size: 15),
+                    SizedBox(width: 8),
                     Text(
-                      _avgRating % 1 == 0
-                          ? '${_avgRating.toInt()}'
-                          : _avgRating.toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: BM.textPri,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                      'Remove Pin',
+                      style: TextStyle(
+                        color: BM.danger,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '($_totalReviews ${_totalReviews == 1 ? 'rating' : 'ratings'})',
-                      style: const TextStyle(color: BM.textTer, fontSize: 12),
                     ),
                   ],
                 ),
-          const SizedBox(height: 24),
-
-          // ── Star picker (locked after submit) ───────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (i) {
-              final filled = i < _selectedStars;
-              return GestureDetector(
-                onTap: _submitted ? null : () => _rate(i + 1),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Icon(
-                    filled ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                    color: filled ? const Color(0xFFFFC107) : BM.textTer,
-                    size: 38,
-                  ),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 28),
-
-          // ── Delete ──────────────────────────────────────────────────
-          GestureDetector(
-            onTap: widget.onDelete,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              decoration: BoxDecoration(
-                color: BM.danger.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: BM.danger.withOpacity(0.25)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(CupertinoIcons.trash, color: BM.danger, size: 15),
-                  SizedBox(width: 8),
-                  Text(
-                    'Remove Pin',
-                    style: TextStyle(
-                      color: BM.danger,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

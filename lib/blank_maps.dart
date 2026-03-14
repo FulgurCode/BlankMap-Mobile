@@ -355,8 +355,8 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
       return;
     }
 
-    final cleaned = raw.replaceFirst(RegExp(r'^r/'), '');
-    final tag = 'r/${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
+    final cleaned = raw;
+    final tag = '${cleaned[0].toUpperCase()}${cleaned.substring(1)}';
 
     final newMap = {
       'name': tag,
@@ -373,8 +373,8 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
   }
 
   String get _previewTag {
-    final raw = _nameCtrl.text.trim().replaceFirst(RegExp(r'^r/'), '');
-    return raw.isEmpty ? 'r/YourMap' : 'r/$raw';
+    final raw = _nameCtrl.text.trim();
+    return raw.isEmpty ? 'YourMap' : '$raw';
   }
 
   @override
