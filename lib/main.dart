@@ -71,20 +71,20 @@ class _MainNavState extends State<MainNav> {
     setState(() {
       _activeLayerId = id;
       _activeLayer = name;
-      _currentIndex = 0;
+      _currentIndex = 1;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
+      BlankMapsScreen(onTagSelected: _goToMap),
       MapScreen(
         activeLayer: _activeLayer,
         // activeLayerId: _activeLayerId,
         // token: _token,
         onLayerChanged: (name) => setState(() => _activeLayer = name),
       ),
-      BlankMapsScreen(onTagSelected: _goToMap),
       ProfileScreen(token: _token),
     ];
 
@@ -98,14 +98,14 @@ class _MainNavState extends State<MainNav> {
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.map_outlined),
-            activeIcon: Icon(Icons.map),
-            label: 'The Map',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
             activeIcon: Icon(Icons.explore),
             label: 'BlankMaps',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map_outlined),
+            activeIcon: Icon(Icons.map),
+            label: 'The Map',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
