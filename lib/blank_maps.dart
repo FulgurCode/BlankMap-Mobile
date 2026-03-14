@@ -273,7 +273,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
   IconPickerIcon _pickedIcon = IconPickerIcon(
     name: 'location_on',
     data: Icons.location_on,
-    pack: 'material',
+    pack: 'material cupertino',
   );
   bool _iconWasPicked = false;
   String? _nameError;
@@ -289,7 +289,7 @@ class _CreateBlankMapSheetState extends State<_CreateBlankMapSheet> {
     final picked = await showIconPicker(
       context,
       configuration: SinglePickerConfiguration(
-        iconPackModes: [IconPack.cupertino],
+        iconPackModes: [IconPack.cupertino, IconPack.material],
         backgroundColor: BM.surface,
         iconColor: BM.textSec,
         selectedIconBackgroundColor: BM.accent,
